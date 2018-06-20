@@ -6,6 +6,8 @@
 \usepackage{cp1718t}
 \usepackage{subcaption}
 \usepackage{adjustbox}
+
+\usepackage{float}
 %================= lhs2tex=====================================================%
 %include polycode.fmt 
 %format (div (x)(y)) = x "\div " y
@@ -994,7 +996,7 @@ Já nesta alínea, foi necessário comparar entidades, pois, caso elas já estiv
 Além disso, como uma transação é do tipo \emph{(vendedor, (valor, comprador))}, o comprador terá uma atualização com o valor negativo da transação, pois aquiriu o bem. 
 
 O diagrama da Figura~\ref{fig:Ledger} demonstra os passos da resolução. 
-\begin{figure}
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=0.7\textwidth]{ledger.png}
 \end{center}
@@ -1015,9 +1017,9 @@ addT (t,l) = update (snd (snd t), -(fst (snd t))) (update (fst t, fst (snd t)) l
 ledger = cataList (either nil addT ) . allTransactions
 \end{code}
 
-A ideia de resolução passou por gerar uma lista de \emph{(Bc >< Bcs)}, em que basicamente se tem a cabeça, representada pelo \emph{Bc}, e a cauda pela \emph{Bcs}. Deste modo, é possível verificar se a cabeça existe na cauda, com auxílio de uma função tipo \emph{and}, não sendo a \emph{Blockchain} válida, caso aconteça. Para isto, foram utilizadas funções auxiliares que permitiram, com auxílio do diagrama de tipos da Figura~\ref{fig:MagicNumber}: 
+A ideia de resolução passou por gerar uma lista de \emph{(Bc,Bcs)}, em que basicamente se tem um bloco, representada pelo \emph{Bc}, e a zona de comparação pela \emph{Bcs}. Deste modo, é possível verificar se o bloco existe na \emph{Bcs}, com auxílio de uma função tipo \emph{and} sobre os \emph{booleanos} obtidos na verificação, não sendo a \emph{Blockchain} válida, caso aconteça. O diagrama representado na Figura~\ref{fig:MagicNumber} demonstra a linha de pensamento de resolução do problema. 
 
-\begin{figure}
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=0.7\textwidth]{magic.png}
 \end{center}
@@ -1057,7 +1059,7 @@ instance Functor QTree where
 
 Sabendo que uma rotação de 90º sobre um retângulo, implica que os pontos das suas arestas fiquem alterados sobre uma ordem de rotação (ver figura~\ref{fig:Rotacao} ). Quer isto dizer que no caso de uma \emph{Cell}, as suas coordenadas \emph{x y} são trocadas para \emph{y x} e, no caso de um \emph{Block}, passa de \emph{Block a b c d} para \emph{Block c a d b}, sendo a função de rotação aplicada recursivamente às sub-árvores do mesmo, já pela nova ordem.  
 
-\begin{figure}
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=0.5\textwidth]{rotate.png}
 \end{center}
@@ -1086,13 +1088,16 @@ A função \emph{invertQTree} altera os valores de todos os parâmetros de um \e
 invertQTree = fmap colorize 
        where colorize (PixelRGBA8 a b c d) = (PixelRGBA8 (255 - a) (255 - b) (255 - c) d)
 \end{code}
-Em espera....
+
+Como esta função retira um dado número de níveis a uma \emph{Qtree}, o algoritmo pensado para executar este processo passou executar várias vezes uma função de compressão de um nível. Chegando ao valor zero, é devolvida a imagem como está.
+É de destacar o comportamento da função \emph{g}, onde, caso receba uma \emph{Cell}, nada deve ser efetuado, uma vez que não é possível comprimir a mesma; se recebesse um \emph{Block} com quatro \emph{Cells}, estas iriram passar a representar apenas uma única, diminuindo ao número de cores existentes. A escolha do elemento \emph{a} da célula mencionada foi arbitrária, visto que não é a escolha deste elemento, representante de uma cor, que é relevante para a compressão de um bloco. Se nenhum dos casos anteriormente mencionados se veriicarem, a função \emph{g} é aplicada aos quatro ramos da árvore.
+
 \begin{code}
 
 tamanho1 :: QTree a -> Int
 tamanho1 (Cell a b c) = b
 tamanho1 (Block a b c d) = tamanho1(a) + tamanho1(b)
- 
+
 tamanho2 :: QTree a -> Int
 tamanho2 (Cell a b c) = c
 tamanho2 (Block a b c d) = tamanho2(a) + tamanho2(c)
@@ -1121,6 +1126,46 @@ outlineQTree f = qt2bm . fmap f
 
 \subsection*{Problema 3}
 
+No problema 3, a ideia inicial de resolução passou por obter as versões pointfree das funções dadas. Assim, têm-se as demonstrações seguintes:
+
+\begin{figure}[H]
+\includegraphics[width=0.6\textwidth]{funcG.png}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=0.35\textwidth]{funcS.png}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=0.6\textwidth]{funcF.png}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=0.4\textwidth]{funcL.png}
+\end{figure}
+
+Pela regra \emph{Fokkinga}, aplicada aos pares de funções \emph{f} e \emph{l}, e \emph{g} com \emph{s}, tem-se:
+
+\begin{figure}[H]
+\includegraphics[width=0.4\textwidth]{FokkingaG.png}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=0.4\textwidth]{FokkingaL.png}
+\end{figure}
+
+Sendo assim, utilizando a lei de \emph{Banana-Split}, obtém-se:
+
+\begin{figure}[H]
+\includegraphics[width=0.7\textwidth]{Banana1.png}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=0.7\textwidth]{Banana2.png}
+\end{figure}
+
+Como se tem \emph{for loop (base k) n}, então:
+
 \begin{code}
  
 parentisa ((a,b),(c,d)) = (a,b,c,d)
@@ -1146,13 +1191,42 @@ recFTree f = baseFTree id id f
 instance BiFunctor FTree
          where bmap f g = cataFTree ( inFTree . baseFTree f g id )
 
+\end{code}
+
+De modo a gerar uma \emph{PTree} a partir de um determinado número de níveis, é necessário, antes de mais tem que ser definido o valor do lado do quadrado de nível zero, daí o uso de uma função auxiliar que tenha como parâmetro o mesmo.
+A partir do diagrama na Figura~\ref{fig:Anamorfismo}, é possível perceber o raciocíneo para aplicar a equação de formação dos nodos da árvore, sendo esta $c\times{}{(\frac{\sqrt{2}}{2})}^{n}$, onde \emph{c} o lado do nível zero e \emph{n} o nível em questão. Assim, depois de gerar um nível, caso ainda existam níveis por criar, tem que ser aplicada a função aos nodos filhos. 
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.6\textwidth]{Anamorfismo.png}
+\end{center}
+\caption{Diagrama para gerar uma \emph{PTree}.}
+\label{fig:Anamorfismo}
+\end{figure}
+
+
+\begin{code}
+
 generatePTreeAux x0 n = anaFTree (h . outNat) 
             where h = (const (lado 0)) -|- (split (lado . succ) (split id id))
                   lado = tamanho . (n -)
                   tamanho = (x0 *) . (((sqrt 2) / 2) ^)
                   
 generatePTree n = generatePTreeAux 100 n n
+\end{code}
 
+De modo a desenhar uma árvore de Pitágoras com \emph{n} níveis, consoante os pretendidos, foi necessário descobrir o algoritmo relativo às alterações nas coordenadas e nos ângulos, de cada nodo "pai" para nodos "filhos". Como este problema envolvia o uso da biblioteca \emph{Gloss}, foi ainda necessário implementar o algoritmo acima mencionado com funções da mesma.
+Pelas imagens destas árvores, é possível ver que ambos os "filhos" fazem um ângulo de 45 graus com a aresta do pai, visível na Figura~\ref{fig:Pit}, onde \emph{alpha} e \emph{beta} representam o ângulo mencionado. Estes têm que possuir, ambos, este valor para a árvore ser simétrica. 
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.5\textwidth]{Pit.png}
+\end{center}
+\caption{Pequena parcela de uma \emph{Árvore de Pitágoras}.}
+\label{fig:Pit}
+\end{figure}
+
+\begin{code}
 drawPTree p = aux p (0,0) 0 where
       aux :: PTree -> (Float, Float) -> Float -> [Picture]
       aux (Unit c) (x,y) ang = [Translate x y (Rotate ang (square c))]
@@ -1167,7 +1241,7 @@ drawPTree p = aux p (0,0) 0 where
 
 \subsection*{Problema 5}
 
-Como a função \emph{singletonbag} é do tipo \emph{singletonbag :: a -> Bag a}, tem que ser criado um par, que possua o valor recebido e a quantidade um. Para isto, é formado um \emph{split} de \emph{id} (parâmetro de \emph{input}) e \emph{(const 1)}, ficando algo do tipo (a,1). Em seguida, este tem que ser colocado numa lista, que possui apenas um elemento, ele mesmo, daí o uso de \emph{singl}. Por fim, tem que ser gerado o \emph{Bag} com esta lista.
+Como a função \emph{singletonbag} é do tipo \emph{singletonbag :: a ->  Bag a}, tem que ser criado um par, que possua o valor recebido e a quantidade um. Para isto, é formado um \emph{split} de \emph{id} (parâmetro de \emph{input}) e \emph{(const 1)}, ficando algo do tipo (a,1). Em seguida, este tem que ser colocado numa lista, que possui apenas um elemento, ele mesmo, daí o uso de \emph{singl}. Por fim, tem que ser gerado o \emph{Bag} com esta lista.
 \begin{code}
 
 singletonbag = B . singl . split id (const 1)
@@ -1176,7 +1250,7 @@ singletonbag = B . singl . split id (const 1)
 Olhando para os tipos das funções que eram necessárias de definir, é notório que o \emph{muB} vai de um \emph{Bag (Bag a)} para um \emph{Bag a}. Como um \emph{Bag a} é do tipo \emph{B [(a, Int)]}, um \emph{Bag (Bag a)} será \emph{B [(B a, Int)]}, ou seja, \emph{B [(B [(a,Int)], Int)]}. Sendo assim, é necessário utilizar a propriedade distributiva da multiplicação do segundo valor no par do \emph{Bag} mais externo, por todos os elementos da lista lá existente (\emph{função ff após getList}). Além disso, como existem várias listas, que têm de ser concatenadas numa só, é aplicado um \emph{foldr (++)} para que se obtenha a lista final pretendida. Por fim, basta aplicar a formação de um \emph{Bag} à lista já obtida. 
 Os passos de obtenção de \emph{muB} podem ser, facilmente, observados na Figura~\ref{fig:MuB}: 
 
-\begin{figure}
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=1\textwidth]{muB.png}
 \end{center}
@@ -1188,7 +1262,7 @@ Os passos de obtenção de \emph{muB} podem ser, facilmente, observados na Figur
 
 getList :: Bag a -> [(a, Int)]
 getList (B l) = l 
-  
+ 
 ff :: ([(a, Int)], Int) -> ([(a, Int)]) 
 ff ([],a) = [] 
 ff (((a,b):t),c) = (a, b * c) : ff (t,c) 
