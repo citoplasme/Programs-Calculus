@@ -1057,7 +1057,7 @@ instance Functor QTree where
     fmap f = cataQTree (inQTree . baseQTree f id)
 \end{code}
 
-Sabendo que uma rotação de 90º sobre um retângulo, implica que os pontos das suas arestas fiquem alterados sobre uma ordem de rotação (ver figura~\ref{fig:Rotacao} ). Quer isto dizer que no caso de uma \emph{Cell}, as suas coordenadas \emph{x y} são trocadas para \emph{y x} e, no caso de um \emph{Block}, passa de \emph{Block a b c d} para \emph{Block c a d b}, sendo a função de rotação aplicada recursivamente às sub-árvores do mesmo, já pela nova ordem.  
+Sabendo que uma rotação de 90º sobre um retângulo, implica que os pontos das suas arestas fiquem alterados sobre uma ordem de rotação (ver Figura~\ref{fig:Rotacao} ). Quer isto dizer que no caso de uma \emph{Cell}, as suas coordenadas \emph{x y} são trocadas para \emph{y x} e, no caso de um \emph{Block}, passa de \emph{Block a b c d} para \emph{Block c a d b}, sendo a função de rotação aplicada recursivamente às sub-árvores do mesmo, já pela nova ordem.  
 
 \begin{figure}[H]
 \begin{center}
@@ -1089,30 +1089,28 @@ invertQTree = fmap colorize
        where colorize (PixelRGBA8 a b c d) = (PixelRGBA8 (255 - a) (255 - b) (255 - c) d)
 \end{code}
 
-Como esta função retira um dado número de níveis a uma \emph{Qtree}, o algoritmo pensado para executar este processo passou executar várias vezes uma função de compressão de um nível. Chegando ao valor zero, é devolvida a imagem como está.
-É de destacar o comportamento da função \emph{g}, onde, caso receba uma \emph{Cell}, nada deve ser efetuado, uma vez que não é possível comprimir a mesma; se recebesse um \emph{Block} com quatro \emph{Cells}, estas iriram passar a representar apenas uma única, diminuindo ao número de cores existentes. A escolha do elemento \emph{a} da célula mencionada foi arbitrária, visto que não é a escolha deste elemento, representante de uma cor, que é relevante para a compressão de um bloco. Se nenhum dos casos anteriormente mencionados se veriicarem, a função \emph{g} é aplicada aos quatro ramos da árvore.
+Como esta função retira um dado número de níveis a uma \emph{Qtree}, o algoritmo pensado para executar este processo passou por executar várias vezes uma função de compressão de um nível, daí a função \emph{compress} ser definida como um ciclo \emph{for}. Chegando ao valor zero, é devolvida a imagem no seu estado atual.
+É de destacar o comportamento da função \emph{g}, onde, caso receba uma \emph{Cell}, nada deve ser efetuado, uma vez que não é possível comprimir a mesma; se recebesse um \emph{Block} com quatro \emph{Cells}, estas iriram passar a representar apenas uma única, diminuindo ao número de cores existentes. A escolha do elemento \emph{a} da célula mencionada foi arbitrária, visto que não é a escolha deste elemento, representante de uma cor, que é relevante para a compressão de um bloco. Para calcular a largura e o comprimento da célula resultante, optou-se pelo método visível na Figura~\ref{fig:Lados}, onde \emph{x = x1 + x3} e \emph{y = y1 + y2}.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.3\textwidth]{Lados.png}
+\end{center}
+\caption{Método de escolha dos valores dos lados da célula.}
+\label{fig:Lados}
+\end{figure}  
+
+Se nenhum dos casos anteriormente mencionados se verificarem, a função \emph{g} é aplicada aos quatro ramos da árvore
 
 \begin{code}
 
-tamanho1 :: QTree a -> Int
-tamanho1 (Cell a b c) = b
-tamanho1 (Block a b c d) = tamanho1(a) + tamanho1(b)
-
-tamanho2 :: QTree a -> Int
-tamanho2 (Cell a b c) = c
-tamanho2 (Block a b c d) = tamanho2(a) + tamanho2(c)
-   
-auxcompressQTree :: QTree a -> Int -> QTree a
-auxcompressQTree y 0 = y
-auxcompressQTree y k = auxcompressQTree (g (y)) (k-1)
- 
 g b@(Cell a x y) = b
-g b@(Block (Cell a _ _) (Cell _ _ _) (Cell _ _ _) (Cell _ _ _)) = let x = tamanho1 b
-                                                                      y = tamanho2 b
-                                                                  in (Cell a x y)
+g b@(Block (Cell a x1 y1) (Cell _ x2 _) (Cell _ _ y3) (Cell _ _ _)) = let x = x1 + x2
+                                                                          y = y1 + y3
+                                                                      in (Cell a x y)
 g h@(Block a b c d) = Block(g a) (g b) (g c) (g d)
  
-compressQTree k y = auxcompressQTree y k
+compressQTree k y = for g y k
 
 \end{code}
 
@@ -1207,12 +1205,12 @@ A partir do diagrama na Figura~\ref{fig:Anamorfismo}, é possível perceber o ra
 
 \begin{code}
 
-generatePTreeAux x0 n = anaFTree (h . outNat) 
+generateAux x0 n = anaFTree (h . outNat) 
             where h = (const (lado 0)) -|- (split (lado . succ) (split id id))
                   lado = tamanho . (n -)
                   tamanho = (x0 *) . (((sqrt 2) / 2) ^)
                   
-generatePTree n = generatePTreeAux 100 n n
+generatePTree n = generateAux 100 n n
 \end{code}
 
 De modo a desenhar uma árvore de Pitágoras com \emph{n} níveis, consoante os pretendidos, foi necessário descobrir o algoritmo relativo às alterações nas coordenadas e nos ângulos, de cada nodo "pai" para nodos "filhos". Como este problema envolvia o uso da biblioteca \emph{Gloss}, foi ainda necessário implementar o algoritmo acima mencionado com funções da mesma.
@@ -1222,7 +1220,7 @@ Pelas imagens destas árvores, é possível ver que ambos os "filhos" fazem um �
 \begin{center}
 \includegraphics[width=0.5\textwidth]{Pit.png}
 \end{center}
-\caption{Pequena parcela de uma \emph{Árvore de Pitágoras}.}
+\caption{Parcela de uma \emph{Árvore de Pitágoras}.}
 \label{fig:Pit}
 \end{figure}
 
@@ -1238,6 +1236,14 @@ drawPTree p = aux p (0,0) 0 where
                         (somaXLeft, somaYLeft) = branchToGlobal angRads (-somaX, somaY) 
                         (somaXRight, somaYRight) = branchToGlobal angRads (somaX, somaY)
 \end{code}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.5\textwidth]{Pit2.png}
+\end{center}
+\caption{Exemplo de execução da função para \emph{n} = 10.}
+\label{fig:Pit2}
+\end{figure}
 
 \subsection*{Problema 5}
 
