@@ -4,7 +4,6 @@ import Cp
 import Nat
 import Graphics.Gloss
 
-
 data FTree a b = Unit b | Comp a (FTree a b) (FTree a b) deriving (Eq,Show)
 type PTree = FTree Square Square
 type Square = Float
@@ -16,12 +15,7 @@ recFTree :: (a -> d) -> Either b1 (b2, (a, a)) -> Either b1 (b2, (d, d))
 cataFTree :: (Either b1 (b2, (d, d)) -> d) -> FTree b2 b1 -> d
 anaFTree :: (a1 -> Either b (a2, (a1, a1))) -> a1 -> FTree a2 b
 hyloFTree :: (Either b1 (b2, (c, c)) -> c) -> (a -> Either b1 (b2, (a, a))) -> a -> c
-{-
-generatePTree n = aux n 100 where 
-       aux :: Int -> Float -> PTree 
-       aux 0 x = Unit x
-       aux n x = Comp x (aux (n-1) (x * (sqrt(2)/2))) (aux (n-1) (x * (sqrt(2)/2))) 
--}
+
 inFTree = either Unit (uncurry(\a -> uncurry (Comp a)))
 outFTree (Unit c)         = Left c
 outFTree (Comp a t1 t2) = Right(a,(t1,t2))
@@ -42,6 +36,11 @@ generatePTreeAux tam n = anaFTree (h . outNat)
                   
 generatePTree n = generatePTreeAux 100 n n
 
+desenha :: Int -> [Picture]
+desenha x = aux x 0 where
+    aux :: Int -> Int -> [Picture] 
+    aux a b | a == b = [(Pictures $ (drawPTree (generatePTree b)))] 
+            | otherwise = [(Pictures $ (drawPTree (generatePTree b)))] ++ aux a (b + 1)  
 
 drawPTree :: PTree -> [Picture]
 drawPTree p = aux p (0,0) 0 where
@@ -61,5 +60,5 @@ square s = rectangleSolid s s
 
 main = animate window white draw
     where
-    pics = drawPTree (generatePTree 10)
-    draw t = Pictures $ pics
+    pics = desenha 10
+    draw t = pics !! (floor (t/2))
